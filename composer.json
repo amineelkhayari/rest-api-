@@ -1,0 +1,12 @@
+{
+  "name": "yourname/php-api-starter",
+  "description": "No-framework PHP API with clean architecture, router, middleware, Swagger UI",
+  "type": "project",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "App\\": "src/App/",
+      "Core\\": "src/Core/"
+    }
+  }
+}
