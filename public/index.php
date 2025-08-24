@@ -38,19 +38,20 @@ $pipeline = new Core\MiddlewarePipeline([
     // You must provide the public key to JwtAuth for it to work
     function ($req, $res, $next) use ($issuer, $audience) {
         if (strpos($req->getPath(), '/v1') === 0) {
-            // Example: $publicKey = file_get_contents('/path/to/public.key');
-            $publicKey = ""; // Set your public key here
-            $jwt = new App\Middleware\JwtAuth($publicKey, $issuer, $audience);
-            $result = $jwt($req, $res, $next);
-            if ($result !== null && method_exists($result, 'send')) return $result;
-            $auth = new App\Middleware\ApiKeyAuth();
-            return $auth($req, $res, $next);
+            $jwtTest = new App\Middleware\JwtAuthMiddleware($issuer, $audience);
+            return $jwtTest($req, $res, $next);
+            //         //if ($result !== null && method_exists($result, 'send')) return $result;
+            //         //$auth = new App\Middleware\ApiKeyAuth();
+            //        // return $auth($req, $res, $next);
         }
         return $next($req, $res);
     },
+    //new App\Middleware\JwtAuthMiddleware($issuer, $audience)
 ]);
 
 // Dispatch
-$handler = function ($req, $res) use ($router) { return $router->dispatch($req, $res); };
+$handler = function ($req, $res) use ($router) {
+    return $router->dispatch($req, $res);
+};
 $final = $pipeline->handle($request, $response, $handler);
 $final->send();

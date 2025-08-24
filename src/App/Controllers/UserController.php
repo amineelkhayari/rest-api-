@@ -15,7 +15,8 @@ class UserController
     #[\App\Route(path: '/v1/users', method: 'GET')]
     public function index(Request $req, Response $res)
     {
-        return $res->json(['data' => $this->users]);
+        $dt = $req->user;
+        return $res->json(['data' =>$dt]);
     }
 
     #[\App\Route(path: '/v1/users/{id}', method: 'GET')]

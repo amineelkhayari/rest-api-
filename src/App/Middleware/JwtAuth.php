@@ -25,7 +25,7 @@ class JwtAuth
         }
         $jwt = $m[1];
         $payload = $this->decodeJwt($jwt);
-        return $res->json(['poyload'=>$jwt,"dt"=>$payload]);
+        //return $res->json(['poyload'=>$jwt,"dt"=>$payload]);
         if (!$payload) {
             return $res->json(['error' => 'Invalid token'], 401);
         }

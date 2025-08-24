@@ -10,8 +10,9 @@ class HomeController
     public function health(Request $req, Response $res)
     {
         return $res->json([
-            'status' => 'ok',
-            'time' => date('c')
+            'status' => $req,
+            'time' => date('c'),
+            
         ]);
     }
 

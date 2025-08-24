@@ -10,6 +10,6 @@ use App\Controllers\UserController;
 OpenApiGenerator::generateYaml([
     new HomeController(),
     new UserController()
-], __DIR__ . '/public/openapi.yaml');
+], __DIR__ . '/public/test.yaml');
 
 echo "OpenAPI spec generated in public/openapi.yaml\n";

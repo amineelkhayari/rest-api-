@@ -43,6 +43,8 @@ paths:
       summary: List users
       security:
         - OAuth2Manager: ["manager-api"]
+        - ApiKeyAuth: ["manager-api"]
+
       responses:
         '200':
           description: List of users

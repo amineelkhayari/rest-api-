@@ -1,26 +1,9 @@
 <?php
 
-/**
- * JwtAuthMiddleware.php
- * Pure-PHP JWT validator for IdentityServer (ES256), no Composer.
- *
- * Usage (vanilla PHP):
- * -------------------------------------------------
- * require 'JwtAuthMiddleware.php';
- * $auth = new JwtAuthMiddleware(
- *     issuer: 'https://localhost:5001',   // <-- your IdentityServer base URL
- *     audience: 'manager',                // optional, set if you check 'aud'
- *     cacheFile: __DIR__.'/_jwks_cache.json',
- *     cacheTtl: 3600,                     // 1 hour cache
- *     clockSkew: 60                       // seconds of leeway for exp/nbf
- * );
- *
- * // Example "middleware" style:
- * $claims = $auth->requireBearer(); // exits with 401 on failure
- * // ... your protected code here, $claims has the JWT claims array ...
- *
- * echo "Hello " . ($claims['fullname'] ?? 'user');
- */
+namespace App\Middleware;
+
+use Core\Request;
+use Core\Response;
 
 class JwtAuthMiddleware
 {
@@ -33,7 +16,7 @@ class JwtAuthMiddleware
     public function __construct(
         string $issuer,
         ?string $audience = null,
-        string $cacheFile = '/tmp/jwks_cache.json',
+        string $cacheFile = 'jwks_cache.json',
         int $cacheTtl = 3600,
         int $clockSkew = 60
     ) {
@@ -44,6 +27,22 @@ class JwtAuthMiddleware
         $this->clockSkew = $clockSkew;
     }
 
+    public function __invoke(Request $req, Response $res, $next)
+    {
+        $jwt = $this->getBearerToken();
+        if (!$jwt) {
+            $this->unauthorized('Missing Bearer token');
+            return $res->json(['error' => 'Missing or invalid Authorization header'], 401);
+        }
+        try {
+            $claims = $this->validate($jwt);
+            $req->user = $claims;
+            return $next($req, $res);
+        } catch (\ErrorException $e) {
+           // $this->unauthorized($e->getMessage());
+            return $res->json(['error' => $e->getMessage()], 401);
+        }
+    }
     /** Call this in your route before protected logic. Returns claims array or exits 401. */
     public function requireBearer(): array
     {
@@ -56,7 +55,7 @@ class JwtAuthMiddleware
         try {
             $claims = $this->validate($jwt);
             return $claims;
-        } catch (Exception $e) {
+        } catch (\ErrorException $e) {
             $this->unauthorized($e->getMessage());
             return []; // <- satisfy Intelephense
         }
@@ -74,32 +73,32 @@ class JwtAuthMiddleware
         $headerJson  = $this->b64url_decode($hB64);
         $payloadJson = $this->b64url_decode($pB64);
         if ($headerJson === false || $payloadJson === false) {
-            throw new Exception('Invalid base64url encoding');
+            throw new \ErrorException('Invalid base64url encoding');
         }
 
         $header  = json_decode($headerJson, true);
         $claims  = json_decode($payloadJson, true);
         if (!is_array($header) || !is_array($claims)) {
-            throw new Exception('Invalid JWT JSON');
+            throw new \ErrorException('Invalid JWT JSON');
         }
 
         $alg = $header['alg'] ?? null;
         $kid = $header['kid'] ?? null;
         if ($alg !== 'ES256') {
-            throw new Exception('Unsupported alg (expected ES256)');
+            throw new \ErrorException('Unsupported alg (expected ES256)');
         }
         if (!$kid) {
-            throw new Exception('Missing kid');
+            throw new \ErrorException('Missing kid');
         }
 
         // Fetch JWKS (cached) and pick the key by kid
         $jwks = $this->getJwks();
         $jwk = $this->selectJwkByKid($jwks, $kid);
         if (!$jwk) {
-            throw new Exception("No matching JWK for kid=$kid");
+            throw new \ErrorException("No matching JWK for kid=$kid");
         }
         if (($jwk['kty'] ?? '') !== 'EC' || ($jwk['crv'] ?? '') !== 'P-256') {
-            throw new Exception('Unsupported key type/curve (expected EC P-256)');
+            throw new \ErrorException('Unsupported key type/curve (expected EC P-256)');
         }
 
         // Build PEM from JWK (x,y) and verify signature
@@ -107,35 +106,35 @@ class JwtAuthMiddleware
         $data = $hB64 . '.' . $pB64;
         $rawSig = $this->b64url_decode($sB64);
         if ($rawSig === false) {
-            throw new Exception('Invalid signature base64url');
+            throw new \ErrorException('Invalid signature base64url');
         }
         $derSig = $this->ecdsaRawToDer($rawSig);
         $ok = openssl_verify($data, $derSig, $publicKeyPem, OPENSSL_ALGO_SHA256);
         if ($ok !== 1) {
-            throw new Exception('Signature verification failed');
+            throw new \ErrorException('Signature verification failed');
         }
 
         // Validate registered claims
         $now = time();
         if (isset($claims['iss']) && $claims['iss'] !== $this->issuer) {
-            throw new Exception('Invalid iss');
+            throw new \ErrorException('Invalid iss');
         }
         if ($this->audience !== null) {
             $aud = $claims['aud'] ?? null;
             $audValid = is_array($aud) ? in_array($this->audience, $aud, true) : ($aud === $this->audience);
             if (!$audValid) {
-                throw new Exception('Invalid aud');
+                throw new \ErrorException('Invalid aud');
             }
         }
         if (isset($claims['exp']) && ($now - $this->clockSkew) >= (int)$claims['exp']) {
-            throw new Exception('Token expired');
+            throw new \ErrorException('Token expired');
         }
         if (isset($claims['nbf']) && ($now + $this->clockSkew) < (int)$claims['nbf']) {
-            throw new Exception('Token not yet valid');
+            throw new \ErrorException('Token not yet valid');
         }
         if (isset($claims['iat']) && ($now + $this->clockSkew) < (int)$claims['iat'] - 86400 * 365) {
             // absurd iat in the far future (basic sanity check; optional)
-            throw new Exception('Invalid iat');
+            throw new \ErrorException('Invalid iat');
         }
 
         return $claims;
@@ -169,7 +168,7 @@ class JwtAuthMiddleware
     {
         $parts = explode('.', $jwt);
         if (count($parts) !== 3) {
-            throw new Exception('Invalid JWT format');
+            throw new \ErrorException('Invalid JWT format');
         }
         return $parts;
     }
@@ -217,16 +216,16 @@ class JwtAuthMiddleware
         if ($resp === false) {
             $err = curl_error($ch);
             curl_close($ch);
-            throw new Exception("HTTP GET failed: $err");
+            throw new \ErrorException("HTTP GET failed: $err");
         }
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         if ($code < 200 || $code >= 300) {
-            throw new Exception("HTTP $code from $url");
+            throw new \ErrorException("HTTP $code from $url");
         }
         $json = json_decode($resp, true);
         if (!is_array($json)) {
-            throw new Exception("Invalid JSON from $url");
+            throw new \ErrorException("Invalid JSON from $url");
         }
         return $json;
     }
@@ -245,7 +244,7 @@ class JwtAuthMiddleware
         $x = $this->b64url_decode($jwk['x']);
         $y = $this->b64url_decode($jwk['y']);
         if ($x === false || $y === false) {
-            throw new Exception('Invalid JWK x/y');
+            throw new \ErrorException('Invalid JWK x/y');
         }
 
         // Uncompressed EC point (0x04 || X || Y)
@@ -275,7 +274,7 @@ class JwtAuthMiddleware
     private function ecdsaRawToDer(string $raw): string
     {
         $len = strlen($raw);
-        if ($len % 2 !== 0) throw new Exception('Invalid ECDSA raw length');
+        if ($len % 2 !== 0) throw new \ErrorException('Invalid ECDSA raw length');
         $half = intdiv($len, 2);
         $r = ltrim(substr($raw, 0, $half), "\x00");
         $s = ltrim(substr($raw, $half), "\x00");
