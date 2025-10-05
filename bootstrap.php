@@ -45,6 +45,11 @@ AttributeRouteLoader::load(
         new \App\Controllers\UserController()
     ]
 );
+//$loader = new \Core\RouteLoader($router);
+
+// Register controllers
+//$loader->registerController(\App\Controllers\HomeController::class);
+
 
 // Optionally load legacy/manual routes
 require __DIR__ . '/routes/api.php';

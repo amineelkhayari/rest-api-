@@ -4,7 +4,7 @@ info:
   version: 1.0.0
   description: Simple no-framework PHP API with routing, middleware, and OAuth2 auth.
 servers:
-  - url: /
+  - url: /pub-api/public
 
 paths:
   /health:
@@ -42,8 +42,8 @@ paths:
     get:
       summary: List users
       security:
-        - OAuth2Manager: ["manager-api"]
-        - ApiKeyAuth: ["manager-api"]
+        - OAuth2accident: ["accident-api"]
+        - ApiKeyAuth: ["accident-api"]
 
       responses:
         '200':
@@ -60,7 +60,7 @@ paths:
     post:
       summary: Create user
       security:
-        - OAuth2Manager: ["manager-api"]
+        - OAuth2accident: ["accident-api"]
       requestBody:
         required: true
         content:
@@ -84,7 +84,7 @@ paths:
     get:
       summary: Get user
       security:
-        - OAuth2Manager: ["manager-api"]
+        - OAuth2accident: ["accident-api"]
       parameters:
         - in: path
           name: id
@@ -107,15 +107,15 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-    OAuth2Manager:
+    OAuth2accident:
       type: oauth2
-      description: IdentityServer OAuth2 for Manager SPA (Authorization Code with PKCE)
+      description: IdentityServer OAuth2 for accident SPA (Authorization Code with PKCE)
       flows:
         authorizationCode:
           authorizationUrl: https://localhost:5001/connect/authorize
           tokenUrl: https://localhost:5001/connect/token
           scopes:
-            manager-api: Access Manager API
+            accident-api: Access accident API
             openid: OpenID Connect
             profile: User profile
 
@@ -129,4 +129,4 @@ components:
           type: string
 
 security:
-  - OAuth2Manager: ["manager-api"]
+  - OAuth2accident: ["accident-api"]

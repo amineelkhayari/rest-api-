@@ -14,7 +14,7 @@
   <script>
     window.onload = function() {
       const ui = SwaggerUIBundle({
-        url: "openapi.yaml", // your OpenAPI YAML file
+        url: "swagger.json", // your OpenAPI YAML file
         dom_id: '#swagger',
         presets: [
           SwaggerUIBundle.presets.apis
@@ -23,17 +23,16 @@
         deepLinking: true
       });
 
-      // OAuth2 configuration for Manager SPA
+      // OAuth2 configuration for accident SPA
       ui.initOAuth({
-        clientId: "manager-spa", // IdentityServer Manager SPA client
+        clientId: "accident-spa", // IdentityServer accident SPA client
         clientSecret: "", // empty for public client
-        appName: "Manager API Swagger",
-        realm: "manager_api_realm",
+        appName: "accident API Swagger",
         scopeSeparator: " ",
-        scopes: "openid profile manager-api", // scopes matching client
+        scopes: "openid profile accident-api", // scopes matching client
         useBasicAuthenticationWithAccessCodeGrant: false,
         usePkceWithAuthorizationCodeGrant: true, // <--- this enables PKC
-        redirectUri: "http://localhost/api/callback.php" // must match client redirect
+        redirectUri: "http://localhost/pub-api/public/oauth2-redirect.html" // must match client redirect
       });
     };
   </script>

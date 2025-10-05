@@ -3,7 +3,7 @@ namespace Core;
 
 use ReflectionClass;
 use ReflectionMethod;
-use App\Route;
+use App\Helpers\Route;
 
 class AttributeRouteLoader
 {

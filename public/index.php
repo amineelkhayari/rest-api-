@@ -29,7 +29,7 @@ $response = new Core\Response();
 
 // $publicKey removed as requested
 $issuer = "https://localhost:5001";
-$audience = "manager";
+$audience = "accident";
 
 $pipeline = new Core\MiddlewarePipeline([
     new App\Middleware\CorsMiddleware(),

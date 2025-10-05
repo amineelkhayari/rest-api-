@@ -3,10 +3,13 @@ namespace App\Controllers;
 
 use Core\Request;
 use Core\Response;
+use \App\Helpers\Route;
 
+
+//#[Route("/api")]
 class HomeController
 {
-    #[\App\Route(path: '/health', method: 'GET')]
+    #[Route(path: '/health', method: 'GET')]
     public function health(Request $req, Response $res)
     {
         return $res->json([
@@ -16,7 +19,7 @@ class HomeController
         ]);
     }
 
-    #[\App\Route(path: '/test', method: 'GET')]
+    #[Route(path: '/test', method: 'GET')]
     public function test(Request $req, Response $res)
     {
         return $res->json([
@@ -25,7 +28,7 @@ class HomeController
         ]);
     }
 
-    #[\App\Route(path: '/local', method: 'GET')]
+    #[Route(path: '/local', method: 'GET')]
     public function local(Request $req, Response $res)
     {
         return $res->json([

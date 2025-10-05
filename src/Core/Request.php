@@ -26,6 +26,11 @@ class Request
     {
         $headers = function_exists('getallheaders') ? getallheaders() : [];
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+        //echo "before : ".$path;
+
+        $path = str_replace('/pub-api/public', '', $path);
+        //echo "after : ".$path;
+
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
         $input = file_get_contents('php://input');
         $body = $_POST ?: (json_decode($input, true) ?? []);

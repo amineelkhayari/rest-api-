@@ -3,6 +3,7 @@ namespace App\Controllers;
 
 use Core\Request;
 use Core\Response;
+use \App\Helpers\Route;
 
 class UserController
 {
@@ -12,14 +13,14 @@ class UserController
         ['id' => 2, 'name' => 'Bob'],
     ];
 
-    #[\App\Route(path: '/v1/users', method: 'GET')]
+    #[Route(path: '/v1/users', method: 'GET')]
     public function index(Request $req, Response $res)
     {
         $dt = $req->user;
         return $res->json(['data' =>$dt]);
     }
 
-    #[\App\Route(path: '/v1/users/{id}', method: 'GET')]
+    #[Route(path: '/v1/users/{id}', method: 'GET')]
     public function show(Request $req, Response $res, array $params)
     {
         $id = (int)($params['id'] ?? 0);
@@ -27,7 +28,7 @@ class UserController
         return $res->json(['error' => 'User not found'], 404);
     }
 
-    #[\App\Route(path: '/v1/users', method: 'POST')]
+    #[Route(path: '/v1/users', method: 'POST')]
     public function store(Request $req, Response $res)
     {
         $body = $req->getBody();

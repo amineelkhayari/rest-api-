@@ -21,7 +21,7 @@
 //     return $res->text($yaml, 200, 'application/yaml');
 // });
 
-$router->get('/docs', function ($req, $res) {
+$router->get('/', function ($req, $res) {
     $html = file_get_contents(__DIR__ . '/../docs/index.php');
     return $res->text($html, 200, 'text/html');
 });
