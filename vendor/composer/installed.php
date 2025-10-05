@@ -3,7 +3,7 @@
         'name' => 'yourname/php-api-starter',
         'pretty_version' => 'dev-master',
         'version' => 'dev-master',
-        'reference' => 'acb31fa9b57f3f80d0801768c2f9e88880e920ce',
+        'reference' => '1055bd75a21102cab5979b65f47016cd53be808d',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'yourname/php-api-starter' => array(
             'pretty_version' => 'dev-master',
             'version' => 'dev-master',
-            'reference' => 'acb31fa9b57f3f80d0801768c2f9e88880e920ce',
+            'reference' => '1055bd75a21102cab5979b65f47016cd53be808d',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

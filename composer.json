@@ -2,11 +2,22 @@
   "name": "yourname/php-api-starter",
   "description": "No-framework PHP API with clean architecture, router, middleware, Swagger UI",
   "type": "project",
-  "require": {},
+  "license": "proprietary",
+  "require": {
+    "php": ">=8.0"
+  },
   "autoload": {
     "psr-4": {
       "App\\": "src/App/",
       "Core\\": "src/Core/"
     }
   }
+    ,
+    "authors": [
+      {
+        "name": "amine",
+        "email": "amine@example.com"
+      }
+    ],
+    "minimum-stability": "stable"
 }
