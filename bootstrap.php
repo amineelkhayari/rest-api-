@@ -27,9 +27,9 @@ require_once __DIR__ . '/src/Core/Router.php';
 require_once __DIR__ . '/src/Core/MiddlewarePipeline.php';
 
 // App controllers and middleware
-require_once __DIR__ . '/src/App/Controllers/HomeController.php';
-require_once __DIR__ . '/src/App/Controllers/UserController.php';
 require_once __DIR__ . '/src/Core/AttributeRouteLoader.php';
+// controllers will be auto-discovered by AttributeRouteLoader when called without
+// an explicit controller list
 require_once __DIR__ . '/src/App/Middleware/CorsMiddleware.php';
 require_once __DIR__ . '/src/App/Middleware/JsonBodyParser.php';
 require_once __DIR__ . '/src/App/Middleware/ApiKeyAuth.php';
@@ -37,19 +37,8 @@ require_once __DIR__ . '/src/App/Middleware/ApiKeyAuth.php';
 
 $router = new Core\Router();
 
-// Load attribute-based routes
-AttributeRouteLoader::load(
-    $router,
-    [
-        new \App\Controllers\HomeController(),
-        new \App\Controllers\UserController()
-    ]
-);
-//$loader = new \Core\RouteLoader($router);
-
-// Register controllers
-//$loader->registerController(\App\Controllers\HomeController::class);
-
+// Load attribute-based routes (auto-discover controllers in src/App/Controllers)
+AttributeRouteLoader::load($router);
 
 // Optionally load legacy/manual routes
 require __DIR__ . '/routes/api.php';

@@ -5,6 +5,7 @@ use Core\Request;
 use Core\Response;
 use \App\Helpers\Route;
 
+#[\App\Helpers\ApiController]
 class UserController
 {
     // In-memory store just for demo

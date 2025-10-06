@@ -7,6 +7,7 @@ use \App\Helpers\Route;
 
 
 //#[Route("/api")]
+#[\App\Helpers\ApiController]
 class HomeController
 {
     #[Route(path: '/health', method: 'GET')]
