@@ -15,6 +15,8 @@ if ($config['debug']) {
 require_once __DIR__ . '/src/Core/Container.php';
 $container = new Core\Container();
 $container->set('config', $config);
+// make config globally available for simple loader/middleware wiring
+$GLOBALS['config'] = $config;
 
 // Register ErrorHandler
 require_once __DIR__ . '/src/Core/ErrorHandler.php';

@@ -36,16 +36,16 @@ $pipeline = new Core\MiddlewarePipeline([
     new App\Middleware\JsonBodyParser(),
     // Protect everything under /v1 with JWT and API key
     // You must provide the public key to JwtAuth for it to work
-    function ($req, $res, $next) use ($issuer, $audience) {
-        if (strpos($req->getPath(), '/v1') === 0) {
-            $jwtTest = new App\Middleware\JwtAuthMiddleware($issuer, $audience);
-            return $jwtTest($req, $res, $next);
-            //         //if ($result !== null && method_exists($result, 'send')) return $result;
-            //         //$auth = new App\Middleware\ApiKeyAuth();
-            //        // return $auth($req, $res, $next);
-        }
-        return $next($req, $res);
-    },
+    // function ($req, $res, $next) use ($issuer, $audience) {
+    //     if (strpos($req->getPath(), '/v1') === 0) {
+    //         $jwtTest = new App\Middleware\JwtAuthMiddleware($issuer, $audience);
+    //         return $jwtTest($req, $res, $next);
+    //         //         //if ($result !== null && method_exists($result, 'send')) return $result;
+    //         //         //$auth = new App\Middleware\ApiKeyAuth();
+    //         //        // return $auth($req, $res, $next);
+    //     }
+    //     return $next($req, $res);
+    // },
     //new App\Middleware\JwtAuthMiddleware($issuer, $audience)
 ]);
 

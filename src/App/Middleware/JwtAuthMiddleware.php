@@ -292,6 +292,49 @@ class JwtAuthMiddleware
         return "\x30" . chr(strlen($seq)) . $seq;
     }
 
+    /**
+     * Extract roles/scopes from claims in a best-effort manner.
+     * Returns an array of role strings.
+     */
+    public function extractRolesFromClaims(array $claims): array
+    {
+        $candidate = [];
+        if (isset($claims['roles']) && is_array($claims['roles'])) $candidate = $claims['roles'];
+        elseif (isset($claims['role'])) $candidate = (array)$claims['role'];
+        elseif (isset($claims['realm_access']['roles']) && is_array($claims['realm_access']['roles'])) $candidate = $claims['realm_access']['roles'];
+        elseif (isset($claims['scope'])) $candidate = preg_split('/\s+/', trim($claims['scope']));
+        elseif (isset($claims['scp'])) $candidate = is_array($claims['scp']) ? $claims['scp'] : preg_split('/\s+/', trim((string)$claims['scp']));
+
+        return array_values(array_filter(array_map('strval', (array)$candidate), fn($v) => $v !== ''));
+    }
+    public function extarctClaimType(array $claims,$type): array
+    {
+        $candidate = [];
+        if (isset($claims[$type])) $candidate = is_array($claims[$type]) ? $claims[$type] : preg_split('/\s+/', trim((string)$claims[$type]));
+        return array_values(array_filter(array_map('strval', (array)$candidate), fn($v) => $v !== ''));
+    }
+ 
+    /**
+     * Returns true if the claims contain any of the required roles.
+     */
+    public function hasAnyRole(array $claims, array $requiredRoles): bool
+    {
+        if (empty($requiredRoles)) return true;
+        $roles = $this->extractRolesFromClaims($claims);
+        foreach ($requiredRoles as $r) {
+            if (in_array((string)$r, $roles, true)) return true;
+        }
+        return false;
+    }
+    public function hasAnyClaims(array $claims, array $requiredClaims,$typeClaim): bool
+    {
+        if (empty($requiredClaims)) return true;
+        $claims = $this->extarctClaimType($claims,$typeClaim);
+        foreach ($requiredClaims as $c) {
+        if (in_array((string)$c, $claims, true)) return true;
+        }
+        return false;
+    }
     private function unauthorized(string $reason): void
     {
         http_response_code(401);

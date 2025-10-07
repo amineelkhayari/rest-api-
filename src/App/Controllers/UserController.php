@@ -4,8 +4,13 @@ namespace App\Controllers;
 use Core\Request;
 use Core\Response;
 use \App\Helpers\Route;
+use \App\Helpers\Authorize;
+use \App\Helpers\AllowAnonymous;
+use \App\Helpers\ApiController;
 
-#[\App\Helpers\ApiController]
+#[ApiController]
+//#[\App\Helpers\Authorize]
+
 class UserController
 {
     // In-memory store just for demo
@@ -15,6 +20,8 @@ class UserController
     ];
 
     #[Route(path: '/v1/users', method: 'GET')]
+    #[Authorize(['lll'])]
+
     public function index(Request $req, Response $res)
     {
         $dt = $req->user;
@@ -22,6 +29,8 @@ class UserController
     }
 
     #[Route(path: '/v1/users/{id}', method: 'GET')]
+        #[Authorize(['basique'])]
+
     public function show(Request $req, Response $res, array $params)
     {
         $id = (int)($params['id'] ?? 0);

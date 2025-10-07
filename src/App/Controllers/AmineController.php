@@ -4,8 +4,11 @@ namespace App\Controllers;
 use Core\Request;
 use Core\Response;
 use \App\Helpers\Route;
+use \App\Helpers\Authorize;
+use \App\Helpers\AllowAnonymous;
+use \App\Helpers\ApiController;
 
-#[\App\Helpers\ApiController]
+#[ApiController]
 class AmineController
 {
     // In-memory store just for demo
