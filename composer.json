@@ -12,6 +12,10 @@
       "Core\\": "src/Core/"
     }
   }
+  ,
+  "scripts": {
+    "generate-openapi": "php scripts/generate_openapi.php"
+  }
     ,
     "authors": [
       {

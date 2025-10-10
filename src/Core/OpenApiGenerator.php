@@ -9,6 +9,18 @@ class OpenApiGenerator
 {
     public static function generateYaml(array $controllers, string $outputFile): void
     {
+        $openapi = self::buildSpec($controllers);
+        file_put_contents($outputFile, self::yamlDump($openapi));
+    }
+
+    public static function generateJson(array $controllers, string $outputFile): void
+    {
+        $openapi = self::buildSpec($controllers);
+        file_put_contents($outputFile, json_encode($openapi, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    }
+
+    private static function buildSpec(array $controllers): array
+    {
         $paths = [];
         foreach ($controllers as $controller) {
             $refClass = new ReflectionClass($controller);
@@ -37,6 +49,7 @@ class OpenApiGenerator
                 }
             }
         }
+
         $openapi = [
             'openapi' => '3.0.3',
             'info' => [
@@ -44,10 +57,34 @@ class OpenApiGenerator
                 'version' => '1.0.0',
                 'description' => 'Auto-generated OpenAPI spec.'
             ],
-            'servers' => [['url' => '/']],
-            'paths' => $paths
+            'servers' => [['url' => '/pub-api/public']],
+            'paths' => $paths,
+            'components' => [
+                'securitySchemes' => [
+                    'ApiKeyAuth' => [
+                        'type' => 'apiKey',
+                        'in' => 'header',
+                        'name' => 'X-API-Key'
+                    ],
+                    'OAuth2accident' => [
+                        'type' => 'oauth2',
+                        'flows' => [
+                            'authorizationCode' => [
+                                'authorizationUrl' => 'https://localhost:5001/connect/authorize',
+                                'tokenUrl' => 'https://localhost:5001/connect/token',
+                                'scopes' => [
+                                    'accident-api' => 'Access accident API',
+                                    'openid' => 'OpenID Connect',
+                                    'profile' => 'User profile'
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
         ];
-        file_put_contents($outputFile, self::yamlDump($openapi));
+
+        return $openapi;
     }
 
     // Minimal YAML dumper for associative arrays

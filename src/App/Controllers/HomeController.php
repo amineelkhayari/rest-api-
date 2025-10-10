@@ -12,11 +12,11 @@ use \App\Helpers\ApiController;
 //#[Route("/api")]
 #[ApiController]
 //#[AllowAnonymous]
-#[Authorize([],"accident-api")]
+#[Authorize([], "accident-api")]
 class HomeController
 {
     #[Route(path: '/health', method: 'GET')]
-    #[Authorize(['accident.basique', "accident.admin","accident.superadmin"])]
+    #[Authorize(['accident.basique', "accident.admin", "accident.superadmin"])]
     public function health(Request $req, Response $res)
     {
         return $res->json([
