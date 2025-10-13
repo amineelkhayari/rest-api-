@@ -8,6 +8,7 @@ use \App\Helpers\Route;
 use \App\Helpers\Authorize;
 use \App\Helpers\AllowAnonymous;
 use \App\Helpers\ApiController;
+use Core\Database;
 
 //#[Route("/api")]
 #[ApiController]
@@ -15,6 +16,21 @@ use \App\Helpers\ApiController;
 #[Authorize([], "accident-api")]
 class HomeController
 {
+
+    private Database $db;
+        private EntityManagerInterface $em;
+
+    // public function __construct(?Database $db)
+    // {
+    //     $this->db = $db ?? new Database() ;
+    // }
+
+    //  public function __construct(?EntityManagerInterface $em = null)
+    // {
+    //     // fallback: use global or static instance
+    //     $this->em = $em ?? $GLOBALS['entityManager'];
+    // }
+
     #[Route(path: '/health', method: 'GET')]
     #[Authorize(['accident.basique', "accident.admin", "accident.superadmin"])]
     public function health(Request $req, Response $res)
@@ -32,7 +48,8 @@ class HomeController
     {
         return $res->json([
             'status' => 'ok',
-            'data' => 're'
+            'data' => 're',
+            "er"=>$this->db->getConnection()
         ]);
     }
 

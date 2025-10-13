@@ -7,12 +7,17 @@ use \App\Helpers\Route;
 use \App\Helpers\Authorize;
 use \App\Helpers\AllowAnonymous;
 use \App\Helpers\ApiController;
+use Doctrine\ORM\EntityManagerInterface;
+use Core\Entities\User;
+
 
 #[ApiController]
 //#[\App\Helpers\Authorize]
 
 class UserController
 {
+    
+  
     // In-memory store just for demo
     private array $users = [
         ['id' => 1, 'name' => 'Alice'],
@@ -49,3 +54,5 @@ class UserController
         return $res->json($new, 201);
     }
 }
+
+

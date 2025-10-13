@@ -71,6 +71,41 @@ class AttributeRouteLoader
         }
     }
 
+//     public static function load(Router $router, array $controllers = null, array $services = []): void
+// {
+//     $controllers ??= self::discoverControllers($services);
+
+//     foreach ($controllers as $controller) {
+//         // if $controller is a string (class name), instantiate with services
+//         if (is_string($controller)) {
+//             $refClass = new \ReflectionClass($controller);
+
+//             // Resolve constructor args automatically from $services array by type
+//             $constructor = $refClass->getConstructor();
+//             if ($constructor && $constructor->getNumberOfParameters() > 0) {
+//                 $args = [];
+//                 foreach ($constructor->getParameters() as $param) {
+//                     $type = $param->getType()?->getName();
+//                     if ($type && isset($services[$type])) {
+//                         $args[] = $services[$type];
+//                     } else {
+//                         $args[] = null; // or throw if required
+//                     }
+//                 }
+//                 $controllerInstance = $refClass->newInstanceArgs($args);
+//             } else {
+//                 $controllerInstance = $refClass->newInstance();
+//             }
+//         } else {
+//             $controllerInstance = $controller;
+//             $refClass = new \ReflectionClass($controllerInstance);
+//         }
+
+//         // ... rest of your route loading logic ...
+//     }
+// }
+
+
     /**
      * Create a wrapped handler that applies JWT authentication and role/policy checks.
      */
@@ -117,24 +152,107 @@ class AttributeRouteLoader
     /**
      * Discover controllers automatically in App\Controllers directory.
      */
-    private static function discoverControllers(): array
-    {
-        $dir = __DIR__ . '/../App/Controllers';
-        if (!is_dir($dir)) return [];
+    // private static function discoverControllers(): array
+    // {
+    //     $dir = __DIR__ . '/../App/Controllers';
+    //     if (!is_dir($dir)) return [];
 
-        $controllers = [];
-        foreach (scandir($dir) as $file) {
-            if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php') continue;
+    //     $controllers = [];
+    //     foreach (scandir($dir) as $file) {
+    //         if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php') continue;
 
-            $fqcn = 'App\\Controllers\\' . pathinfo($file, PATHINFO_FILENAME);
-            $path = $dir . '/' . $file;
+    //         $fqcn = 'App\\Controllers\\' . pathinfo($file, PATHINFO_FILENAME);
+    //         $path = $dir . '/' . $file;
 
-            if (!class_exists($fqcn)) require_once $path;
-            if (class_exists($fqcn)) $controllers[] = new $fqcn();
+    //         if (!class_exists($fqcn)) require_once $path;
+    //         if (class_exists($fqcn)) $controllers[] = new $fqcn();
+    //     }
+
+    //     return $controllers;
+    // }
+    private static function discoverControllers(array $services = []): array
+{
+    $dir = __DIR__ . '/../App/Controllers';
+    if (!is_dir($dir)) return [];
+
+    $controllers = [];
+
+    foreach (scandir($dir) as $file) {
+        if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php') continue;
+
+        $fqcn = 'App\\Controllers\\' . pathinfo($file, PATHINFO_FILENAME);
+        if (!class_exists($fqcn)) require_once $dir . '/' . $file;
+        if (!class_exists($fqcn)) continue;
+
+        $refClass = new \ReflectionClass($fqcn);
+        $constructor = $refClass->getConstructor();
+
+        // No constructor? instantiate directly
+        if (!$constructor || $constructor->getNumberOfParameters() === 0) {
+            $controllers[] = $refClass->newInstance();
+            continue;
         }
 
-        return $controllers;
+        // Try to resolve constructor parameters from $services
+        $args = [];
+        foreach ($constructor->getParameters() as $param) {
+            $type = $param->getType()?->getName();
+
+            if ($type && isset($services[$type])) {
+                $args[] = $services[$type];
+            } elseif ($param->isOptional()) {
+                $args[] = $param->getDefaultValue();
+            } else {
+                // Pass null if unresolved (so no crash)
+                $args[] = null;
+            }
+        }
+
+        $controllers[] = $refClass->newInstanceArgs($args);
     }
+
+    return $controllers;
+}
+
+
+
+//   private static function discoverControllers(array $services = []): array
+// {
+//     $dir = __DIR__ . '/../App/Controllers';
+//     if (!is_dir($dir)) return [];
+
+//     $controllers = [];
+//     foreach (scandir($dir) as $file) {
+//         if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php') continue;
+
+//         $fqcn = 'App\\Controllers\\' . pathinfo($file, PATHINFO_FILENAME);
+//         if (!class_exists($fqcn)) require_once $dir . '/' . $file;
+//         if (!class_exists($fqcn)) continue;
+
+//         $refClass = new \ReflectionClass($fqcn);
+//         $constructor = $refClass->getConstructor();
+//         $args = [];
+
+//         if ($constructor) {
+//             foreach ($constructor->getParameters() as $param) {
+//                 $type = $param->getType()?->getName();
+//                 if ($type && isset($services[$type])) {
+//                     $args[] = $services[$type];
+//                 } elseif ($param->isOptional()) {
+//                     $args[] = $param->getDefaultValue();
+//                 } else {
+//                     throw new \RuntimeException("Cannot resolve constructor argument '$type' for $fqcn");
+//                 }
+//             }
+//         }
+
+//         $controllers[] = $refClass->newInstanceArgs($args);
+//     }
+
+//     return $controllers;
+// }
+
+
 }
 
 // namespace Core;

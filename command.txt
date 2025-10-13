@@ -1,0 +1,9 @@
+generate migtaions
+
+    php doctrine-cli.php migrations:diff
+
+make migration 
+
+    php doctrine-cli.php migrations:migrate
+
+
