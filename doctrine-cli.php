@@ -1,27 +1,14 @@
 <?php
-// require_once __DIR__ . '/vendor/autoload.php';
-// require_once __DIR__ . '/bootstrap.php';
-
-// use Core\DoctrineOrmFactory;
-// use Doctrine\ORM\Tools\Console\ConsoleRunner;
-// use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
-
-// $entityManager = DoctrineOrmFactory::createEntityManager();
-
-// ConsoleRunner::run(
-//     new SingleManagerProvider($entityManager)
-// );
-
 require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/bootstrap.php';
 
 use Core\DoctrineOrmFactory;
-use Doctrine\ORM\Tools\Console\ConsoleRunner;
-use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
-use Doctrine\Migrations\DependencyFactory;
-use Doctrine\Migrations\Configuration\Migration\PhpFile;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\Configuration\Migration\PhpFile;
 use Doctrine\Migrations\Tools\Console\ConsoleRunner as MigrationsConsoleRunner;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Doctrine\ORM\Tools\Console\ConsoleRunner;
 use Symfony\Component\Console\Application;
 
 // 1️⃣ Create the EntityManager

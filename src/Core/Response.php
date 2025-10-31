@@ -23,13 +23,23 @@ class Response
         return $this;
     }
 
-    public function header(string $name, string $value): self { $this->headers[$name] = $value; return $this; }
-    public function status(int $code): self { $this->status = $code; return $this; }
+    public function header(string $name, string $value): self
+    {
+        $this->headers[$name] = $value;
+        return $this;
+    }
+
+    public function status(int $code): self
+    {
+        $this->status = $code;
+        return $this;
+    }
 
     public function send(): void
     {
         http_response_code($this->status);
-        foreach ($this->headers as $k => $v) header($k . ': ' . $v);
+        foreach ($this->headers as $k => $v)
+            header($k . ': ' . $v);
         echo $this->body;
     }
 }

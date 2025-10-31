@@ -7,6 +7,7 @@ class Request
      * Authenticated user info (JWT payload)
      */
     public $user = null;
+
     private string $method;
     private string $path;
     private array $headers;
@@ -35,10 +36,33 @@ class Request
         return new self($method, $path, $headers, $_GET, $body);
     }
 
-    public function getMethod(): string { return $this->method; }
-    public function getPath(): string { return $this->path; }
-    public function getHeaders(): array { return $this->headers; }
-    public function getHeader(string $name, $default = null) { return $this->headers[$name] ?? $this->headers[strtolower($name)] ?? $default; }
-    public function getQuery(): array { return $this->query; }
-    public function getBody(): array { return $this->body; }
+    public function getMethod(): string
+    {
+        return $this->method;
+    }
+
+    public function getPath(): string
+    {
+        return $this->path;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+
+    public function getHeader(string $name, $default = null)
+    {
+        return $this->headers[$name] ?? $this->headers[strtolower($name)] ?? $default;
+    }
+
+    public function getQuery(): array
+    {
+        return $this->query;
+    }
+
+    public function getBody(): array
+    {
+        return $this->body;
+    }
 }

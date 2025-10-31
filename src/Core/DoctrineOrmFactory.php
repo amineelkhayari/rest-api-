@@ -1,16 +1,16 @@
 <?php
 namespace Core;
 
+use Doctrine\DBAL\DriverManager;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\ORMSetup;
-use Doctrine\DBAL\DriverManager;
 
 class DoctrineOrmFactory
 {
     public static function createEntityManager(): EntityManager
     {
         $config = ORMSetup::createAttributeMetadataConfiguration(
-            paths: [__DIR__ . '/Entities'], // your entities directory
+            paths: [__DIR__ . '/Entities'],  // your entities directory
             isDevMode: true
         );
 

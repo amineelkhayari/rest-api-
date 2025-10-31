@@ -32,10 +32,9 @@
         scopes: "openid profile accident-api", // scopes matching client
         useBasicAuthenticationWithAccessCodeGrant: false,
         usePkceWithAuthorizationCodeGrant: true, // <--- this enables PKC
-        redirectUri: "http://localhost/pub-api/public/oauth2-redirect.html" // must match client redirect
+        redirectUri: "http://localhost:8080/pub-api/public/oauth2-redirect.html" // must match client redirect
       });
     };
   </script>
 </body>
-
 </html>

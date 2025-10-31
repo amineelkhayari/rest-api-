@@ -39,17 +39,20 @@ class JwtAuthMiddleware
             $req->user = $claims;
             return $next($req, $res);
         } catch (\ErrorException $e) {
-           // $this->unauthorized($e->getMessage());
+            // $this->unauthorized($e->getMessage());
             return $res->json(['error' => $e->getMessage()], 401);
         }
     }
-    /** Call this in your route before protected logic. Returns claims array or exits 401. */
+
+    /**
+     * Call this in your route before protected logic. Returns claims array or exits 401.
+     */
     public function requireBearer(): array
     {
         $jwt = $this->getBearerToken();
         if (!$jwt) {
             $this->unauthorized('Missing Bearer token');
-            return []; // <- satisfy Intelephense
+            return [];  // <- satisfy Intelephense
         }
 
         try {
@@ -57,27 +60,28 @@ class JwtAuthMiddleware
             return $claims;
         } catch (\ErrorException $e) {
             $this->unauthorized($e->getMessage());
-            return []; // <- satisfy Intelephense
+            return [];  // <- satisfy Intelephense
         }
 
         // fallback (should never reach here)
         return [];
     }
 
-
-    /** Validates a JWT and returns claims as associative array. Throws on error. */
+    /**
+     * Validates a JWT and returns claims as associative array. Throws on error.
+     */
     public function validate(string $jwt): array
     {
         [$hB64, $pB64, $sB64] = $this->splitJwt($jwt);
 
-        $headerJson  = $this->b64url_decode($hB64);
+        $headerJson = $this->b64url_decode($hB64);
         $payloadJson = $this->b64url_decode($pB64);
         if ($headerJson === false || $payloadJson === false) {
             throw new \ErrorException('Invalid base64url encoding');
         }
 
-        $header  = json_decode($headerJson, true);
-        $claims  = json_decode($payloadJson, true);
+        $header = json_decode($headerJson, true);
+        $claims = json_decode($payloadJson, true);
         if (!is_array($header) || !is_array($claims)) {
             throw new \ErrorException('Invalid JWT JSON');
         }
@@ -126,13 +130,13 @@ class JwtAuthMiddleware
                 throw new \ErrorException('Invalid aud');
             }
         }
-        if (isset($claims['exp']) && ($now - $this->clockSkew) >= (int)$claims['exp']) {
+        if (isset($claims['exp']) && ($now - $this->clockSkew) >= (int) $claims['exp']) {
             throw new \ErrorException('Token expired');
         }
-        if (isset($claims['nbf']) && ($now + $this->clockSkew) < (int)$claims['nbf']) {
+        if (isset($claims['nbf']) && ($now + $this->clockSkew) < (int) $claims['nbf']) {
             throw new \ErrorException('Token not yet valid');
         }
-        if (isset($claims['iat']) && ($now + $this->clockSkew) < (int)$claims['iat'] - 86400 * 365) {
+        if (isset($claims['iat']) && ($now + $this->clockSkew) < (int) $claims['iat'] - 86400 * 365) {
             // absurd iat in the far future (basic sanity check; optional)
             throw new \ErrorException('Invalid iat');
         }
@@ -156,7 +160,8 @@ class JwtAuthMiddleware
                 }
             }
         }
-        if (!$header) return null;
+        if (!$header)
+            return null;
 
         if (preg_match('/^\s*Bearer\s+([A-Za-z0-9\-\._~\+\/]+=*)\s*$/i', $header, $m)) {
             return $m[1];
@@ -179,7 +184,9 @@ class JwtAuthMiddleware
         return base64_decode($data);
     }
 
-    /** Fetch JWKS (cached) via the OIDC discovery document. */
+    /**
+     * Fetch JWKS (cached) via the OIDC discovery document.
+     */
     private function getJwks(): array
     {
         // Load cache if fresh
@@ -187,12 +194,13 @@ class JwtAuthMiddleware
             $age = time() - filemtime($this->cacheFile);
             if ($age <= $this->cacheTtl) {
                 $cached = json_decode(file_get_contents($this->cacheFile), true);
-                if (is_array($cached)) return $cached;
+                if (is_array($cached))
+                    return $cached;
             }
         }
 
         $oidc = $this->httpGetJson($this->issuer . '/.well-known/openid-configuration');
-        $jwksUri = $oidc['jwks_uri'] ?? ($this->issuer . '/.well-known/openid-configuration/jwks'); // fallback
+        $jwksUri = $oidc['jwks_uri'] ?? ($this->issuer . '/.well-known/openid-configuration/jwks');  // fallback
         $jwks = $this->httpGetJson($jwksUri);
 
         // Save cache
@@ -208,8 +216,8 @@ class JwtAuthMiddleware
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => false, // NOTE: set true and add CA in production
-            CURLOPT_SSL_VERIFYHOST => 0,     // NOTE: set 2 in production
+            CURLOPT_SSL_VERIFYPEER => false,  // NOTE: set true and add CA in production
+            CURLOPT_SSL_VERIFYHOST => 0,  // NOTE: set 2 in production
             CURLOPT_HTTPHEADER => ['Accept: application/json'],
         ]);
         $resp = curl_exec($ch);
@@ -233,12 +241,15 @@ class JwtAuthMiddleware
     private function selectJwkByKid(array $jwks, string $kid): ?array
     {
         foreach (($jwks['keys'] ?? []) as $k) {
-            if (($k['kid'] ?? null) === $kid) return $k;
+            if (($k['kid'] ?? null) === $kid)
+                return $k;
         }
         return null;
     }
 
-    /** Convert EC (P-256) JWK (x,y) → PEM public key. */
+    /**
+     * Convert EC (P-256) JWK (x,y) → PEM public key.
+     */
     private function ecJwkToPem(array $jwk): string
     {
         $x = $this->b64url_decode($jwk['x']);
@@ -256,40 +267,45 @@ class JwtAuthMiddleware
         //   BIT STRING( 0x00 + ecPoint )
         // )
         $der =
-            "\x30\x59" .
-            "\x30\x13" .
-            "\x06\x07\x2A\x86\x48\xCE\x3D\x02\x01" .       // OID: ecPublicKey
-            "\x06\x08\x2A\x86\x48\xCE\x3D\x03\x01\x07" .   // OID: prime256v1
-            "\x03\x42\x00" .                                // BIT STRING, 66 bytes incl 0x00 padding
-            $ecPoint;
+            '0Y'
+            . "0\x13"
+            . "\x06\x07*\x86H\xce=\x02\x01"  // OID: ecPublicKey
+            . "\x06\x08*\x86H\xce=\x03\x01\x07"  // OID: prime256v1
+            . "\x03B\0"  // BIT STRING, 66 bytes incl 0x00 padding
+            . $ecPoint;
 
-        $pem = "-----BEGIN PUBLIC KEY-----\n" .
-            chunk_split(base64_encode($der), 64, "\n") .
-            "-----END PUBLIC KEY-----\n";
+        $pem = "-----BEGIN PUBLIC KEY-----\n"
+            . chunk_split(base64_encode($der), 64, "\n")
+            . "-----END PUBLIC KEY-----\n";
 
         return $pem;
     }
 
-    /** Convert raw (r||s) 64-byte ECDSA signature → ASN.1 DER for OpenSSL. */
+    /**
+     * Convert raw (r||s) 64-byte ECDSA signature → ASN.1 DER for OpenSSL.
+     */
     private function ecdsaRawToDer(string $raw): string
     {
         $len = strlen($raw);
-        if ($len % 2 !== 0) throw new \ErrorException('Invalid ECDSA raw length');
+        if ($len % 2 !== 0)
+            throw new \ErrorException('Invalid ECDSA raw length');
         $half = intdiv($len, 2);
-        $r = ltrim(substr($raw, 0, $half), "\x00");
-        $s = ltrim(substr($raw, $half), "\x00");
+        $r = ltrim(substr($raw, 0, $half), "\0");
+        $s = ltrim(substr($raw, $half), "\0");
 
         $encodeInt = function (string $v): string {
-            if ($v === '') $v = "\x00";
-            if (ord($v[0]) > 0x7f) $v = "\x00" . $v; // ensure positive INTEGER
+            if ($v === '')
+                $v = "\0";
+            if (ord($v[0]) > 0x7F)
+                $v = "\0" . $v;  // ensure positive INTEGER
             return "\x02" . chr(strlen($v)) . $v;
         };
 
         $rEnc = $encodeInt($r);
         $sEnc = $encodeInt($s);
-        $seq  = $rEnc . $sEnc;
+        $seq = $rEnc . $sEnc;
 
-        return "\x30" . chr(strlen($seq)) . $seq;
+        return '0' . chr(strlen($seq)) . $seq;
     }
 
     /**
@@ -299,42 +315,55 @@ class JwtAuthMiddleware
     public function extractRolesFromClaims(array $claims): array
     {
         $candidate = [];
-        if (isset($claims['roles']) && is_array($claims['roles'])) $candidate = $claims['roles'];
-        elseif (isset($claims['role'])) $candidate = (array)$claims['role'];
-        elseif (isset($claims['realm_access']['roles']) && is_array($claims['realm_access']['roles'])) $candidate = $claims['realm_access']['roles'];
-        elseif (isset($claims['scope'])) $candidate = preg_split('/\s+/', trim($claims['scope']));
-        elseif (isset($claims['scp'])) $candidate = is_array($claims['scp']) ? $claims['scp'] : preg_split('/\s+/', trim((string)$claims['scp']));
+        if (isset($claims['roles']) && is_array($claims['roles']))
+            $candidate = $claims['roles'];
+        elseif (isset($claims['role']))
+            $candidate = (array) $claims['role'];
+        elseif (isset($claims['realm_access']['roles']) && is_array($claims['realm_access']['roles']))
+            $candidate = $claims['realm_access']['roles'];
+        elseif (isset($claims['scope']))
+            $candidate = preg_split('/\s+/', trim($claims['scope']));
+        elseif (isset($claims['scp']))
+            $candidate = is_array($claims['scp']) ? $claims['scp'] : preg_split('/\s+/', trim((string) $claims['scp']));
 
-        return array_values(array_filter(array_map('strval', (array)$candidate), fn($v) => $v !== ''));
+        return array_values(array_filter(array_map('strval', (array) $candidate), fn($v) => $v !== ''));
     }
-    public function extarctClaimType(array $claims,$type): array
+
+    public function extarctClaimType(array $claims, $type): array
     {
         $candidate = [];
-        if (isset($claims[$type])) $candidate = is_array($claims[$type]) ? $claims[$type] : preg_split('/\s+/', trim((string)$claims[$type]));
-        return array_values(array_filter(array_map('strval', (array)$candidate), fn($v) => $v !== ''));
+        if (isset($claims[$type]))
+            $candidate = is_array($claims[$type]) ? $claims[$type] : preg_split('/\s+/', trim((string) $claims[$type]));
+        return array_values(array_filter(array_map('strval', (array) $candidate), fn($v) => $v !== ''));
     }
- 
+
     /**
      * Returns true if the claims contain any of the required roles.
      */
     public function hasAnyRole(array $claims, array $requiredRoles): bool
     {
-        if (empty($requiredRoles)) return true;
+        if (empty($requiredRoles))
+            return true;
         $roles = $this->extractRolesFromClaims($claims);
         foreach ($requiredRoles as $r) {
-            if (in_array((string)$r, $roles, true)) return true;
+            if (in_array((string) $r, $roles, true))
+                return true;
         }
         return false;
     }
-    public function hasAnyClaims(array $claims, array $requiredClaims,$typeClaim): bool
+
+    public function hasAnyClaims(array $claims, array $requiredClaims, $typeClaim): bool
     {
-        if (empty($requiredClaims)) return true;
-        $claims = $this->extarctClaimType($claims,$typeClaim);
+        if (empty($requiredClaims))
+            return true;
+        $claims = $this->extarctClaimType($claims, $typeClaim);
         foreach ($requiredClaims as $c) {
-        if (in_array((string)$c, $claims, true)) return true;
+            if (in_array((string) $c, $claims, true))
+                return true;
         }
         return false;
     }
+
     private function unauthorized(string $reason): void
     {
         http_response_code(401);

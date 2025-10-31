@@ -1,5 +1,5 @@
 <?php
-namespace App\Helpers;
+namespace App\Helpers\Attributes;
 
 use Attribute;
 
@@ -28,7 +28,6 @@ class Authorize
      */
     public function __construct(string|array|null $roles = null, ?string $policy = null)
     {
-    
         $this->policy = $policy;
 
         if ($roles === null) {
@@ -46,4 +45,4 @@ class Authorize
         // array
         $this->roles = array_values(array_filter($roles, fn($v) => $v !== ''));
     }
-    }
+}

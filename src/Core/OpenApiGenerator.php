@@ -1,9 +1,9 @@
 <?php
 namespace Core;
 
+use App\Helpers\Route;
 use ReflectionClass;
 use ReflectionMethod;
-use App\Helpers\Route;
 
 class OpenApiGenerator
 {

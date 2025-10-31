@@ -7,3 +7,6 @@ make migration
     php doctrine-cli.php migrations:migrate
 
 
+
+composer dump-autoload
+

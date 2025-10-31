@@ -11,6 +11,6 @@ return [
         'scopes' => 'openid profile accident-api',
         'issuer' => "https://localhost:5001",
         'audience' => "accident",
-        'redrectUrl'=>'http://localhost/pub-api/public/oauth2-redirect.html'
+        'redrectUrl'=>'http://localhost:8080/pub-api/public/oauth2-redirect.html'
     ]
 ];

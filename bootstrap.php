@@ -41,12 +41,7 @@ require_once __DIR__ . '/src/App/Middleware/ApiKeyAuth.php';
 
 $router = new Core\Router();
 
-// Load attribute-based routes (auto-discover controllers in src/App/Controllers)
-//AttributeRouteLoader::load($router);
-// $entityManager = DoctrineOrmFactory::createEntityManager();
-
-// $GLOBALS['entityManager'] = $entityManager;
-AttributeRouteLoader::load($router, null);
+AttributeRouteLoader::load($router, null );
 
 
 
