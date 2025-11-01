@@ -22,6 +22,10 @@ class Post
         $this->title = $title;
         return $this;
     }
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
 
     #[ORM\Column(type: 'text')]
     private string $content;
@@ -30,6 +34,10 @@ class Post
     {
         $this->content = $content;
         return $this;
+    }
+    public function getContent(): string
+    {
+        return $this->content;
     }
 
     // Many-to-One: Post -> User

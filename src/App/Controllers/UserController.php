@@ -29,11 +29,23 @@ class UserController
     ];
 
     #[Route(path: '/v1/users', method: 'GET')]
-    #[Authorize(['lll'])]
+   // #[Authorize(['lll'])]
     public function index(Request $req, Response $res)
     {
-        $dt = $req->user;
-        return $res->json(['data' => $dt]);
+        $users = $this->db->getData(User::class);
+
+        $userData = array_map(function ($u) {
+    $posts = array_map(fn($p) => [
+        'title' => $p->getTitle(),
+        'content' => $p->getContent(),
+    ], $u->getPosts()->toArray());
+
+    return [
+        'email' => $u->getEmail(),
+        'posts' => $posts,
+    ];
+}, $users);
+        return $res->json(['data' => $userData]);
     }
 
     #[Route(path: '/v1/users/{id}', method: 'GET')]

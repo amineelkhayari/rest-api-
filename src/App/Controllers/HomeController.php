@@ -47,13 +47,12 @@ class HomeController
         //     'id' => $u->getId(),
         //     'name' => $u->getName(),
         // ], $users);
-        //  $users = $this->db->getData(Amine::class);
+         $users = $this->db->getData(User::class);
 
-        //     // Convert Doctrine entities to a simple array for JSON
-        //     $userData = array_map(fn($u) => [
-        //         'id' => $u->getId(),
-        //         'name' => $u->getName(),
-        //     ], $users);
+            // Convert Doctrine entities to a simple array for JSON
+            $userData = array_map(fn($u) => [
+                'name' => $u->getEmail(),
+            ], $users);
 
         // ✅ Create and save the entity
         // $amine = new Amine();
@@ -75,7 +74,7 @@ class HomeController
         return $res->json([
             'status' => 'ok',
             'data' => 're',
-            'er' => 'ok'
+            'er' => $userData
         ]);
     }
 

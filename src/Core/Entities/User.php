@@ -32,6 +32,11 @@ class User
         return $this;
     }
 
+    public function getEmail(): string
+    {
+        return $this->id." - ".$this->email." - ".$this->name;
+    }
+
     // One-to-One: User <-> Profile
     #[ORM\OneToOne(targetEntity: Profile::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Profile $profile = null;
@@ -50,7 +55,10 @@ class User
         $this->posts = $posts;
         return $this;
     }
-
+public function getPosts(): Collection
+    {
+        return $this->posts;
+    }
     public function __construct()
     {
         $this->posts = new ArrayCollection();
