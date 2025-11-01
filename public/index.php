@@ -15,7 +15,8 @@ spl_autoload_register(function ($class) {
         if (strncmp($class, $prefix, strlen($prefix)) === 0) {
             $relative = substr($class, strlen($prefix));
             $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
-            if (file_exists($file)) require $file;
+            if (file_exists($file))
+                require $file;
         }
     }
 });
@@ -28,8 +29,8 @@ $response = new Core\Response();
 // Global middleware pipeline
 
 // $publicKey removed as requested
-$issuer = "https://localhost:5001";
-$audience = "accident";
+$issuer = 'https://localhost:5001';
+$audience = 'accident';
 
 $pipeline = new Core\MiddlewarePipeline([
     new App\Middleware\CorsMiddleware(),
@@ -46,7 +47,7 @@ $pipeline = new Core\MiddlewarePipeline([
     //     }
     //     return $next($req, $res);
     // },
-    //new App\Middleware\JwtAuthMiddleware($issuer, $audience)
+    // new App\Middleware\JwtAuthMiddleware($issuer, $audience)
 ]);
 
 // Dispatch

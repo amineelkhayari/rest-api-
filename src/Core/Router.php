@@ -12,10 +12,25 @@ class Router
         $this->routes[$method][] = ['pattern' => $pattern, 'regex' => $regex, 'handler' => $handler];
     }
 
-    public function get(string $pattern, callable $handler): void { $this->add('GET', $pattern, $handler); }
-    public function post(string $pattern, callable $handler): void { $this->add('POST', $pattern, $handler); }
-    public function put(string $pattern, callable $handler): void { $this->add('PUT', $pattern, $handler); }
-    public function delete(string $pattern, callable $handler): void { $this->add('DELETE', $pattern, $handler); }
+    public function get(string $pattern, callable $handler): void
+    {
+        $this->add('GET', $pattern, $handler);
+    }
+
+    public function post(string $pattern, callable $handler): void
+    {
+        $this->add('POST', $pattern, $handler);
+    }
+
+    public function put(string $pattern, callable $handler): void
+    {
+        $this->add('PUT', $pattern, $handler);
+    }
+
+    public function delete(string $pattern, callable $handler): void
+    {
+        $this->add('DELETE', $pattern, $handler);
+    }
 
     public function dispatch(Request $req, Response $res): Response
     {
@@ -25,7 +40,9 @@ class Router
         foreach ($this->routes[$method] ?? [] as $route) {
             if (preg_match($route['regex'], $path, $matches)) {
                 $params = [];
-                foreach ($matches as $k => $v) if (!is_int($k)) $params[$k] = $v;
+                foreach ($matches as $k => $v)
+                    if (!is_int($k))
+                        $params[$k] = $v;
                 return call_user_func($route['handler'], $req, $res, $params);
             }
         }

@@ -1,5 +1,7 @@
 <?php
 use \Core\AttributeRouteLoader;
+use \Core\DoctrineOrmFactory;
+
 // Shared bootstrapping used by public/index.php (front controller)
 $config = require __DIR__ . '/config/app.php';
 
@@ -39,8 +41,9 @@ require_once __DIR__ . '/src/App/Middleware/ApiKeyAuth.php';
 
 $router = new Core\Router();
 
-// Load attribute-based routes (auto-discover controllers in src/App/Controllers)
-AttributeRouteLoader::load($router);
+AttributeRouteLoader::load($router, null );
+
+
 
 // Optionally load legacy/manual routes
 require __DIR__ . '/routes/api.php';
