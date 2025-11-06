@@ -1,0 +1,29 @@
+# PHP / project
+/vendor/
+/node_modules/
+/composer.lock
+migrations/
+# Ignore specific database file inside data folder
+/data/database.sqlite
+
+# Keep the folder (so the structure exists in repo)
+!/data/
+!.gitkeep
+
+# sqlite databases
+*.sqlite
+*.sqlite3
+database.sqlite
+
+# env / config files (common names; adjust to your filenames)
+.env
+.env.local
+.env.*.local
+config.php
+*.config.php
+config/*.php
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
