@@ -31,8 +31,9 @@ class AttributeRouteLoader
 
             foreach ($refClass->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                 $routeAttributes = $method->getAttributes(Route::class);
-                if (!$routeAttributes)
+                if (!$routeAttributes) {
                     continue;
+                }
 
                 $methodAuthorize = self::getAttributeInstance($method, Authorize::class);
                 $methodAllowsAnon = (bool) $method->getAttributes(AllowAnonymous::class);
@@ -118,20 +119,24 @@ class AttributeRouteLoader
     private static function discoverControllers(array $services = []): array
     {
         $dir = __DIR__ . '/../App/Controllers';
-        if (!is_dir($dir))
+        if (!is_dir($dir)) {
             return [];
+        }
 
         $controllers = [];
 
         foreach (scandir($dir) as $file) {
-            if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php')
+            if ($file[0] === '.' || pathinfo($file, PATHINFO_EXTENSION) !== 'php') {
                 continue;
+            }
 
             $fqcn = 'App\\Controllers\\' . pathinfo($file, PATHINFO_FILENAME);
-            if (!class_exists($fqcn))
+            if (!class_exists($fqcn)) {
                 require_once $dir . '/' . $file;
-            if (!class_exists($fqcn))
+            }
+            if (!class_exists($fqcn)) {
                 continue;
+            }
 
             $refClass = new ReflectionClass($fqcn);
             $constructor = $refClass->getConstructor();

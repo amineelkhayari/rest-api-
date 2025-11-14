@@ -32,6 +32,8 @@ class UserController
    // #[Authorize(['lll'])]
     public function index(Request $req, Response $res)
     {
+                json_encode($req);
+
         $users = $this->db->getData(User::class);
 
         $userData = array_map(function ($u) {
@@ -52,11 +54,14 @@ class UserController
     // #[Authorize(['basique'])]
     public function show(Request $req, Response $res, array $params)
     {
+                json_encode($req);
+
         $id = (int) ($params['id'] ?? 0);
         foreach ($this->users as $u)
-            if ($u['id'] === $id)
-                return $res->json($u);
-        return $res->json(['error' => 'User not found'], 404);
+        {
+         if ($u['id'] === $id){return $res->json($u);}
+        }
+    return $res->json(['error' => 'User not found'], 404);
     }
 
     #[Route(path: '/v1/users', method: 'POST')]
@@ -67,7 +72,6 @@ class UserController
         if (!isset($body['name']) || $body['name'] === '') {
             return $res->json(['error' => 'Name is required'], 422);
         }
-        $new = ['id' => rand(3, 10000), 'name' => $body['name']];
         $user = new User();
         $user->setName('ddd');
         $user->setEmail('eeee');

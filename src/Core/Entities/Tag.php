@@ -13,9 +13,18 @@ class Tag
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
+    public function getId(): int
+    {
+        return $this->id;
+    }
 
     #[ORM\Column(type: 'string', length: 100)]
     private string $name;
+
+    public function getName(): int
+    {
+        return $this->name;
+    }
 
     // Many-to-Many inverse: Tag -> Post
     #[ORM\ManyToMany(targetEntity: Post::class, mappedBy: 'tags')]

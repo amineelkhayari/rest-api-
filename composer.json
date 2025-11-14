@@ -13,7 +13,9 @@
   "autoload": {
     "psr-4": {
       "App\\": "src/App/",
-      "Core\\": "src/Core/"
+      "Core\\": "src/Core/",
+      "Routes\\": "src/Routes/",
+       "Exceptions\\": "src/Exceptions/"
     }
   }
   ,

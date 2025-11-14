@@ -1,27 +1,14 @@
 <?php
+use App\Middleware\CorsMiddleware;
+use App\Middleware\JsonBodyParser;
+use Core\BootstrapClass;
+use Core\MiddlewarePipeline;
+
 // If using Composer, prefer this:
-$composerAutoload = __DIR__ . '/../vendor/autoload.php';
-if (file_exists($composerAutoload)) {
-    require $composerAutoload;
-}
+require_once __DIR__ . '/../vendor/autoload.php';
 
-// Minimal PSR-4-ish autoloader (in case Composer is not used)
-spl_autoload_register(function ($class) {
-    $prefixes = [
-        'App\\' => __DIR__ . '/../src/App/',
-        'Core\\' => __DIR__ . '/../src/Core/'
-    ];
-    foreach ($prefixes as $prefix => $baseDir) {
-        if (strncmp($class, $prefix, strlen($prefix)) === 0) {
-            $relative = substr($class, strlen($prefix));
-            $file = $baseDir . str_replace('\\', '/', $relative) . '.php';
-            if (file_exists($file))
-                require $file;
-        }
-    }
-});
 
-[$container, $router] = require __DIR__ . '/../bootstrap.php';
+[$container, $router] = BootstrapClass::init();  // require_once __DIR__ . '/../bootstrap.php'
 
 $request = Core\Request::fromGlobals();
 $response = new Core\Response();
@@ -32,22 +19,9 @@ $response = new Core\Response();
 $issuer = 'https://localhost:5001';
 $audience = 'accident';
 
-$pipeline = new Core\MiddlewarePipeline([
-    new App\Middleware\CorsMiddleware(),
-    new App\Middleware\JsonBodyParser(),
-    // Protect everything under /v1 with JWT and API key
-    // You must provide the public key to JwtAuth for it to work
-    // function ($req, $res, $next) use ($issuer, $audience) {
-    //     if (strpos($req->getPath(), '/v1') === 0) {
-    //         $jwtTest = new App\Middleware\JwtAuthMiddleware($issuer, $audience);
-    //         return $jwtTest($req, $res, $next);
-    //         //         //if ($result !== null && method_exists($result, 'send')) return $result;
-    //         //         //$auth = new App\Middleware\ApiKeyAuth();
-    //         //        // return $auth($req, $res, $next);
-    //     }
-    //     return $next($req, $res);
-    // },
-    // new App\Middleware\JwtAuthMiddleware($issuer, $audience)
+$pipeline = new MiddlewarePipeline([
+    new CorsMiddleware(),
+    new JsonBodyParser(),
 ]);
 
 // Dispatch

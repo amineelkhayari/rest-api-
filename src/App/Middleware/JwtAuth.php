@@ -25,7 +25,6 @@ class JwtAuth
         }
         $jwt = $m[1];
         $payload = $this->decodeJwt($jwt);
-        // return $res->json(['poyload'=>$jwt,"dt"=>$payload]);
         if (!$payload) {
             return $res->json(['error' => 'Invalid token'], 401);
         }
@@ -43,21 +42,31 @@ class JwtAuth
     private function decodeJwt(string $jwt): ?array
     {
         $parts = explode('.', $jwt);
-        if (count($parts) !== 3)
+        if (count($parts) !== 3) {
             return null;
-        [$header, $payload, $signature] = $parts;
-        $header = json_decode($this->base64url_decode($header), true);
-        $payload = json_decode($this->base64url_decode($payload), true);
-        $sig = $this->base64url_decode($signature);
-        $data = $parts[0] . '.' . $parts[1];
-        return ['header' => $header, 'payload' => $payload, 'sig' => $data];
+        }
 
-        if (!$this->verifySignature($data, $sig, $header['alg'] ?? '', $this->publicKey))
+        [$header64, $payload64, $signature64] = $parts;
+
+        $header = json_decode($this->base64UrlDecode($header64), true);
+        $payload = json_decode($this->base64UrlDecode($payload64), true);
+
+        if (!$header || !$payload) {
             return null;
+        }
+
+        $data = $header64 . '.' . $payload64;
+        $signature = $this->base64UrlDecode($signature64);
+
+        // ✅ Verify the signature before trusting the payload
+        if (!$this->verifySignature($data, $signature, $header['alg'] ?? '', $this->publicKey)) {
+            return null;
+        }
+
         return $payload;
     }
 
-    private function base64url_decode($data)
+    private function base64UrlDecode($data)
     {
         $remainder = strlen($data) % 4;
         if ($remainder) {

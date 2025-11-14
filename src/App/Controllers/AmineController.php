@@ -20,7 +20,7 @@ class AmineController
     #[Route(path: '/amine', method: 'GET')]
     public function index(Request $req, Response $res)
     {
-        $dt = $req->user;
+        json_encode($req);
         return $res->json(['data' => $this->users]);
     }
 }

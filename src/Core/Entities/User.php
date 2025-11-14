@@ -34,12 +34,17 @@ class User
 
     public function getEmail(): string
     {
-        return $this->id." - ".$this->email." - ".$this->name;
+        return $this->id . ' - ' . $this->email . ' - ' . $this->name;
     }
 
     // One-to-One: User <-> Profile
     #[ORM\OneToOne(targetEntity: Profile::class, mappedBy: 'user', cascade: ['persist', 'remove'])]
     private ?Profile $profile = null;
+    public function setProfile(Profile $profile): self
+    {
+        $this->profile = $profile;
+        return $this;
+    }
 
     // One-to-Many: User -> Posts
     #[ORM\OneToMany(mappedBy: 'author', targetEntity: Post::class, cascade: ['persist', 'remove'])]
@@ -50,15 +55,17 @@ class User
         return $this->posts;
     }
 
-    public function setPost(Post $author): self
+    public function setPost(Post $posts): self
     {
         $this->posts = $posts;
         return $this;
     }
-public function getPosts(): Collection
+
+    public function getPosts(): Collection
     {
         return $this->posts;
     }
+
     public function __construct()
     {
         $this->posts = new ArrayCollection();

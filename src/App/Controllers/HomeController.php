@@ -41,36 +41,33 @@ class HomeController
     #[AllowAnonymous]
     public function test(Request $req, Response $res)
     {
+        json_encode($req);
         //         $users = $this->em->getRepository(Amine::class)->findAll();
         //          // Format for JSON response
         // $userData = array_map(fn(Amine $u) => [
         //     'id' => $u->getId(),
         //     'name' => $u->getName(),
         // ], $users);
-         $users = $this->db->getData(User::class);
+        $users = $this->db->getData(User::class);
 
-            // Convert Doctrine entities to a simple array for JSON
-            $userData = array_map(fn($u) => [
-                'name' => $u->getEmail(),
-            ], $users);
+        // Convert Doctrine entities to a simple array for JSON
+        $userData = array_map(fn($u) => [
+            'name' => $u->getEmail(),
+        ], $users);
 
         // ✅ Create and save the entity
         // $amine = new Amine();
         // $amine->setName("amine");
 
-        // $this->db->save($amine);
-        //  $user = new User();
-        // $user->setName("ddd");
-        // $user->setEmail("eeee");
-
         //     $post = new Post();
         //     $post->setTitle("dddd");
         //     $post->setContent("ddd");
         //     $user->addPost($post); // automatically links both sides
-        $user = new FakeTable();
-        $user->name = 'amine';
+        // $user = new FakeTable();
+        // $user->name = 'amine';
 
-        $this->db->save($user);
+        // $this->db->save($user)
+        
         return $res->json([
             'status' => 'ok',
             'data' => 're',
@@ -81,6 +78,8 @@ class HomeController
     #[Route(path: '/local', method: 'GET')]
     public function local(Request $req, Response $res)
     {
+        json_encode($req);
+
         return $res->json([
             'status' => 'local',
             'data' => 'min'

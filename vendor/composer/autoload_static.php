@@ -32,11 +32,19 @@ class ComposerStaticInita8249515c8de6272a91830167681a292
             'Symfony\\Component\\Console\\' => 26,
             'Symfony\\Component\\Cache\\' => 24,
         ),
+        'R' => 
+        array (
+            'Routes\\' => 7,
+        ),
         'P' => 
         array (
             'Psr\\Log\\' => 8,
             'Psr\\Container\\' => 14,
             'Psr\\Cache\\' => 10,
+        ),
+        'E' => 
+        array (
+            'Exceptions\\' => 11,
         ),
         'D' => 
         array (
@@ -110,6 +118,10 @@ class ComposerStaticInita8249515c8de6272a91830167681a292
         array (
             0 => __DIR__ . '/..' . '/symfony/cache',
         ),
+        'Routes\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src/Routes',
+        ),
         'Psr\\Log\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/log/src',
@@ -121,6 +133,10 @@ class ComposerStaticInita8249515c8de6272a91830167681a292
         'Psr\\Cache\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/cache/src',
+        ),
+        'Exceptions\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/src/Exceptions',
         ),
         'Doctrine\\Persistence\\' => 
         array (

@@ -29,7 +29,7 @@ class Router
 
     public function delete(string $pattern, callable $handler): void
     {
-        $this->add('DELETE', $pattern, $handler);
+        $this->add('DELETE', $pattern, $handler );
     }
 
     public function dispatch(Request $req, Response $res): Response
@@ -41,8 +41,12 @@ class Router
             if (preg_match($route['regex'], $path, $matches)) {
                 $params = [];
                 foreach ($matches as $k => $v)
+                {
                     if (!is_int($k))
+                    {
                         $params[$k] = $v;
+                    }
+                }
                 return call_user_func($route['handler'], $req, $res, $params);
             }
         }
