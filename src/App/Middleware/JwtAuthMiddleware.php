@@ -4,6 +4,7 @@ namespace App\Middleware;
 
 use Core\Request;
 use Core\Response;
+use App\Exceptions\ExceptionGen;
 
 class JwtAuthMiddleware
 {
@@ -12,6 +13,8 @@ class JwtAuthMiddleware
     private string $cacheFile;
     private int $cacheTtl;
     private int $clockSkew;
+
+    private const REGREX_STR = '/\s+/';
 
     public function __construct(
         string $issuer,
@@ -38,8 +41,7 @@ class JwtAuthMiddleware
             $claims = $this->validate($jwt);
             $req->user = $claims;
             return $next($req, $res);
-        } catch (\ErrorException $e) {
-            // $this->unauthorized($e->getMessage());
+        } catch (ExceptionGen $e) {
             return $res->json(['error' => $e->getMessage()], 401);
         }
     }
@@ -52,13 +54,11 @@ class JwtAuthMiddleware
         $jwt = $this->getBearerToken();
         if (!$jwt) {
             $this->unauthorized('Missing Bearer token');
-            return [];  // <- satisfy Intelephense
         }
 
         try {
-            $claims = $this->validate($jwt);
-            return $claims;
-        } catch (\ErrorException $e) {
+            return $this->validate($jwt);
+        } catch (ExceptionGen $e) {
             $this->unauthorized($e->getMessage());
             return [];  // <- satisfy Intelephense
         }
@@ -74,71 +74,78 @@ class JwtAuthMiddleware
     {
         [$hB64, $pB64, $sB64] = $this->splitJwt($jwt);
 
-        $headerJson = $this->b64url_decode($hB64);
-        $payloadJson = $this->b64url_decode($pB64);
+        $headerJson = $this->base64UrlDecode($hB64);
+        $payloadJson = $this->base64UrlDecode($pB64);
         if ($headerJson === false || $payloadJson === false) {
-            throw new \ErrorException('Invalid base64url encoding');
+            throw new ExceptionGen('Invalid base64url encoding');
         }
 
         $header = json_decode($headerJson, true);
         $claims = json_decode($payloadJson, true);
         if (!is_array($header) || !is_array($claims)) {
-            throw new \ErrorException('Invalid JWT JSON');
+            throw new ExceptionGen('Invalid JWT JSON');
         }
 
         $alg = $header['alg'] ?? null;
         $kid = $header['kid'] ?? null;
-        if ($alg !== 'ES256') {
-            throw new \ErrorException('Unsupported alg (expected ES256)');
-        }
-        if (!$kid) {
-            throw new \ErrorException('Missing kid');
-        }
-
-        // Fetch JWKS (cached) and pick the key by kid
-        $jwks = $this->getJwks();
-        $jwk = $this->selectJwkByKid($jwks, $kid);
-        if (!$jwk) {
-            throw new \ErrorException("No matching JWK for kid=$kid");
-        }
-        if (($jwk['kty'] ?? '') !== 'EC' || ($jwk['crv'] ?? '') !== 'P-256') {
-            throw new \ErrorException('Unsupported key type/curve (expected EC P-256)');
+        if ($alg !== 'ES256' || !$kid) {
+            throw new ExceptionGen($alg !== 'ES256'
+                ? 'Unsupported alg (expected ES256)'
+                : 'Missing kid');
         }
 
-        // Build PEM from JWK (x,y) and verify signature
-        $publicKeyPem = $this->ecJwkToPem($jwk);
-        $data = $hB64 . '.' . $pB64;
-        $rawSig = $this->b64url_decode($sB64);
+        // Validate JWK
+        $jwk = $this->selectJwkByKid($this->getJwks(), $kid);
+        if (!$jwk || ($jwk['kty'] ?? '') !== 'EC' || ($jwk['crv'] ?? '') !== 'P-256') {
+            throw new ExceptionGen('Invalid or unsupported JWK (expected EC P-256)');
+        }
+
+        // Verify signature
+        $rawSig = $this->base64UrlDecode($sB64);
         if ($rawSig === false) {
-            throw new \ErrorException('Invalid signature base64url');
+            throw new ExceptionGen('Invalid signature base64url');
         }
-        $derSig = $this->ecdsaRawToDer($rawSig);
-        $ok = openssl_verify($data, $derSig, $publicKeyPem, OPENSSL_ALGO_SHA256);
+        $ok = openssl_verify(
+            "$hB64.$pB64",
+            $this->ecdsaRawToDer($rawSig),
+            $this->ecJwkToPem($jwk),
+            OPENSSL_ALGO_SHA256
+        );
         if ($ok !== 1) {
-            throw new \ErrorException('Signature verification failed');
+            throw new ExceptionGen('Signature verification failed');
         }
 
-        // Validate registered claims
+        // Claims validation
         $now = time();
-        if (isset($claims['iss']) && $claims['iss'] !== $this->issuer) {
-            throw new \ErrorException('Invalid iss');
+        $skew = $this->clockSkew;
+
+        if (($claims['iss'] ?? $this->issuer) !== $this->issuer) {
+            throw new ExceptionGen('Invalid iss');
         }
+
         if ($this->audience !== null) {
             $aud = $claims['aud'] ?? null;
-            $audValid = is_array($aud) ? in_array($this->audience, $aud, true) : ($aud === $this->audience);
-            if (!$audValid) {
-                throw new \ErrorException('Invalid aud');
+            $audOk = is_array($aud)
+                ? in_array($this->audience, $aud, true)
+                : ($aud === $this->audience);
+            if (!$audOk) {
+                throw new ExceptionGen('Invalid aud');
             }
         }
-        if (isset($claims['exp']) && ($now - $this->clockSkew) >= (int) $claims['exp']) {
-            throw new \ErrorException('Token expired');
-        }
-        if (isset($claims['nbf']) && ($now + $this->clockSkew) < (int) $claims['nbf']) {
-            throw new \ErrorException('Token not yet valid');
-        }
-        if (isset($claims['iat']) && ($now + $this->clockSkew) < (int) $claims['iat'] - 86400 * 365) {
-            // absurd iat in the far future (basic sanity check; optional)
-            throw new \ErrorException('Invalid iat');
+
+        if (
+            (isset($claims['exp']) && $now - $skew >= (int) $claims['exp']) ||
+            (isset($claims['nbf']) && $now + $skew < (int) $claims['nbf']) ||
+            (isset($claims['iat']) && $now + $skew < (int) $claims['iat'] - 86400 * 365)
+        ) {
+            $message = 'Invalid iat';
+            if (isset($claims['exp']) && $now - $skew >= (int) $claims['exp']) {
+                $message = 'Token expired';
+            } elseif (isset($claims['nbf']) && $now + $skew < (int) $claims['nbf']) {
+                $message = 'Token not yet valid';
+            }
+
+            throw new ExceptionGen($message);
         }
 
         return $claims;
@@ -160,9 +167,9 @@ class JwtAuthMiddleware
                 }
             }
         }
-        if (!$header)
+        if (!$header) {
             return null;
-
+        }
         if (preg_match('/^\s*Bearer\s+([A-Za-z0-9\-\._~\+\/]+=*)\s*$/i', $header, $m)) {
             return $m[1];
         }
@@ -173,12 +180,12 @@ class JwtAuthMiddleware
     {
         $parts = explode('.', $jwt);
         if (count($parts) !== 3) {
-            throw new \ErrorException('Invalid JWT format');
+            throw new ExceptionGen('Invalid JWT format');
         }
         return $parts;
     }
 
-    private function b64url_decode(string $data)
+    private function base64UrlDecode(string $data)
     {
         $data = strtr($data, '-_', '+/');
         return base64_decode($data);
@@ -194,8 +201,9 @@ class JwtAuthMiddleware
             $age = time() - filemtime($this->cacheFile);
             if ($age <= $this->cacheTtl) {
                 $cached = json_decode(file_get_contents($this->cacheFile), true);
-                if (is_array($cached))
+                if (is_array($cached)) {
                     return $cached;
+                }
             }
         }
 
@@ -224,16 +232,16 @@ class JwtAuthMiddleware
         if ($resp === false) {
             $err = curl_error($ch);
             curl_close($ch);
-            throw new \ErrorException("HTTP GET failed: $err");
+            throw new ExceptionGen("HTTP GET failed: $err");
         }
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
         if ($code < 200 || $code >= 300) {
-            throw new \ErrorException("HTTP $code from $url");
+            throw new ExceptionGen("HTTP $code from $url");
         }
         $json = json_decode($resp, true);
         if (!is_array($json)) {
-            throw new \ErrorException("Invalid JSON from $url");
+            throw new ExceptionGen("Invalid JSON from $url");
         }
         return $json;
     }
@@ -241,8 +249,9 @@ class JwtAuthMiddleware
     private function selectJwkByKid(array $jwks, string $kid): ?array
     {
         foreach (($jwks['keys'] ?? []) as $k) {
-            if (($k['kid'] ?? null) === $kid)
+            if (($k['kid'] ?? null) === $kid) {
                 return $k;
+            }
         }
         return null;
     }
@@ -252,10 +261,10 @@ class JwtAuthMiddleware
      */
     private function ecJwkToPem(array $jwk): string
     {
-        $x = $this->b64url_decode($jwk['x']);
-        $y = $this->b64url_decode($jwk['y']);
+        $x = $this->base64UrlDecode($jwk['x']);
+        $y = $this->base64UrlDecode($jwk['y']);
         if ($x === false || $y === false) {
-            throw new \ErrorException('Invalid JWK x/y');
+            throw new ExceptionGen('Invalid JWK x/y');
         }
 
         // Uncompressed EC point (0x04 || X || Y)
@@ -274,11 +283,9 @@ class JwtAuthMiddleware
             . "\x03B\0"  // BIT STRING, 66 bytes incl 0x00 padding
             . $ecPoint;
 
-        $pem = "-----BEGIN PUBLIC KEY-----\n"
+        return "-----BEGIN PUBLIC KEY-----\n"
             . chunk_split(base64_encode($der), 64, "\n")
             . "-----END PUBLIC KEY-----\n";
-
-        return $pem;
     }
 
     /**
@@ -287,17 +294,20 @@ class JwtAuthMiddleware
     private function ecdsaRawToDer(string $raw): string
     {
         $len = strlen($raw);
-        if ($len % 2 !== 0)
-            throw new \ErrorException('Invalid ECDSA raw length');
+        if ($len % 2 !== 0) {
+            throw new ExceptionGen('Invalid ECDSA raw length');
+        }
         $half = intdiv($len, 2);
         $r = ltrim(substr($raw, 0, $half), "\0");
         $s = ltrim(substr($raw, $half), "\0");
 
         $encodeInt = function (string $v): string {
-            if ($v === '')
+            if ($v === '') {
                 $v = "\0";
-            if (ord($v[0]) > 0x7F)
+            }
+            if (ord($v[0]) > 0x7F) {
                 $v = "\0" . $v;  // ensure positive INTEGER
+            }
             return "\x02" . chr(strlen($v)) . $v;
         };
 
@@ -315,16 +325,17 @@ class JwtAuthMiddleware
     public function extractRolesFromClaims(array $claims): array
     {
         $candidate = [];
-        if (isset($claims['roles']) && is_array($claims['roles']))
+        if (isset($claims['roles']) && is_array($claims['roles'])) {
             $candidate = $claims['roles'];
-        elseif (isset($claims['role']))
+        } elseif (isset($claims['role'])) {
             $candidate = (array) $claims['role'];
-        elseif (isset($claims['realm_access']['roles']) && is_array($claims['realm_access']['roles']))
+        } elseif (isset($claims['realm_access']['roles']) && is_array($claims['realm_access']['roles'])) {
             $candidate = $claims['realm_access']['roles'];
-        elseif (isset($claims['scope']))
-            $candidate = preg_split('/\s+/', trim($claims['scope']));
-        elseif (isset($claims['scp']))
-            $candidate = is_array($claims['scp']) ? $claims['scp'] : preg_split('/\s+/', trim((string) $claims['scp']));
+        } elseif (isset($claims['scope'])) {
+            $candidate = preg_split(self::REGREX_STR, trim($claims['scope']));
+        } elseif (isset($claims['scp'])) {
+            $candidate = is_array($claims['scp']) ? $claims['scp'] : preg_split(self::REGREX_STR, trim((string) $claims['scp']));
+        }
 
         return array_values(array_filter(array_map('strval', (array) $candidate), fn($v) => $v !== ''));
     }
@@ -332,8 +343,9 @@ class JwtAuthMiddleware
     public function extarctClaimType(array $claims, $type): array
     {
         $candidate = [];
-        if (isset($claims[$type]))
-            $candidate = is_array($claims[$type]) ? $claims[$type] : preg_split('/\s+/', trim((string) $claims[$type]));
+        if (isset($claims[$type])) {
+            $candidate = is_array($claims[$type]) ? $claims[$type] : preg_split(self::REGREX_STR, trim((string) $claims[$type]));
+        }
         return array_values(array_filter(array_map('strval', (array) $candidate), fn($v) => $v !== ''));
     }
 
@@ -342,24 +354,28 @@ class JwtAuthMiddleware
      */
     public function hasAnyRole(array $claims, array $requiredRoles): bool
     {
-        if (empty($requiredRoles))
+        if (empty($requiredRoles)) {
             return true;
+        }
         $roles = $this->extractRolesFromClaims($claims);
         foreach ($requiredRoles as $r) {
-            if (in_array((string) $r, $roles, true))
+            if (in_array((string) $r, $roles, true)) {
                 return true;
+            }
         }
         return false;
     }
 
     public function hasAnyClaims(array $claims, array $requiredClaims, $typeClaim): bool
     {
-        if (empty($requiredClaims))
+        if (empty($requiredClaims)) {
             return true;
+        }
         $claims = $this->extarctClaimType($claims, $typeClaim);
         foreach ($requiredClaims as $c) {
-            if (in_array((string) $c, $claims, true))
+            if (in_array((string) $c, $claims, true)) {
                 return true;
+            }
         }
         return false;
     }

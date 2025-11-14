@@ -50,7 +50,7 @@ class OpenApiGenerator
             }
         }
 
-        $openapi = [
+        return [
             'openapi' => '3.0.3',
             'info' => [
                 'title' => 'PHP API Starter',
@@ -84,7 +84,6 @@ class OpenApiGenerator
             ]
         ];
 
-        return $openapi;
     }
 
     // Minimal YAML dumper for associative arrays

@@ -18,7 +18,19 @@ class Amine
     private string $name;
 
     #[ORM\Column(type: 'string', length: 100)]
+    private string $nom;
+    public function getNom(): string
+    {
+        return $this->nom;
+    }
+
+    #[ORM\Column(type: 'string', length: 100)]
     private string $content;
+
+    public function getContent(): string
+    {
+        return $this->content;
+    }
 
     // --- Getters & Setters ---
     public function getId(): ?int

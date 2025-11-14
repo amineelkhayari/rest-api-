@@ -16,4 +16,6 @@ class FakeTable
 
     #[ORM\Column(type: 'string', length: 100)]
     public string $name;
+    #[ORM\Column(type: 'string', length: 100)]
+    public string $test;
 }

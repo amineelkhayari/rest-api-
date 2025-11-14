@@ -13,6 +13,10 @@ class Post
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
+    public function getId(): int
+    {
+        return $this->id;
+    }
 
     #[ORM\Column(type: 'string', length: 200)]
     private string $title;
@@ -22,6 +26,7 @@ class Post
         $this->title = $title;
         return $this;
     }
+
     public function getTitle(): string
     {
         return $this->title;
@@ -35,6 +40,7 @@ class Post
         $this->content = $content;
         return $this;
     }
+
     public function getContent(): string
     {
         return $this->content;

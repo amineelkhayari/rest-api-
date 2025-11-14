@@ -1,6 +1,5 @@
 <?php
 require_once __DIR__ . '/vendor/autoload.php';
-require_once __DIR__ . '/bootstrap.php';
 
 use Core\DoctrineOrmFactory;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;

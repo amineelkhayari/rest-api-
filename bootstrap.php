@@ -1,51 +1,39 @@
 <?php
-use \Core\AttributeRouteLoader;
-use \Core\DoctrineOrmFactory;
+// use App\Config\App;
+// use Core\AttributeRouteLoader;
+// use Core\DoctrineOrmFactory
+// use Core\Router
+// use Routes\Web
 
-// Shared bootstrapping used by public/index.php (front controller)
-$config = require __DIR__ . '/config/app.php';
+// // Shared bootstrapping used by public/index.php (front controller)
+// $config = App::get();
 
-// Simple error reporting based on config
-if ($config['debug']) {
-    ini_set('display_errors', '1');
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', '0');
-}
+// // Simple error reporting based on config
+// if ($config['debug']) {
+//     ini_set('display_errors', '1');
+//     error_reporting(E_ALL);
+// } else {
+//     ini_set('display_errors', '0');
+// }
 
-// Create a super-light container
-require_once __DIR__ . '/src/Core/Container.php';
-$container = new Core\Container();
-$container->set('config', $config);
-// make config globally available for simple loader/middleware wiring
-$GLOBALS['config'] = $config;
+// // Create a super-light container
+// $container = new Core\Container();
+// $container->set('config', $config);
+// // make config globally available for simple loader/middleware wiring
+// $GLOBALS['config'] = $config;
 
-// Register ErrorHandler
-require_once __DIR__ . '/src/Core/ErrorHandler.php';
-Core\ErrorHandler::register($config['debug']);
+// // Register ErrorHandler
+// Core\ErrorHandler::register($config['debug']);
 
-// Request/Response, Router and Middleware pipeline
-require_once __DIR__ . '/src/Core/Request.php';
-require_once __DIR__ . '/src/Core/Response.php';
-require_once __DIR__ . '/src/Core/Router.php';
-require_once __DIR__ . '/src/Core/MiddlewarePipeline.php';
+// $router = new Router()
 
-// App controllers and middleware
-require_once __DIR__ . '/src/Core/AttributeRouteLoader.php';
-// controllers will be auto-discovered by AttributeRouteLoader when called without
-// an explicit controller list
-require_once __DIR__ . '/src/App/Middleware/CorsMiddleware.php';
-require_once __DIR__ . '/src/App/Middleware/JsonBodyParser.php';
-require_once __DIR__ . '/src/App/Middleware/ApiKeyAuth.php';
+// AttributeRouteLoader::load($router, null)
 
+// // Optionally load legacy/manual routes
+// Web::register($router)
 
-$router = new Core\Router();
+// return [$container, $router]
 
-AttributeRouteLoader::load($router, null );
+use App\Core\BootstrapClass;
 
-
-
-// Optionally load legacy/manual routes
-require __DIR__ . '/routes/api.php';
-
-return [$container, $router];
+[$container, $router] = BootstrapClass::init();

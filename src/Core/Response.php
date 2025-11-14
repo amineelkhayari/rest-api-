@@ -39,7 +39,9 @@ class Response
     {
         http_response_code($this->status);
         foreach ($this->headers as $k => $v)
+        {
             header($k . ': ' . $v);
+        }
         echo $this->body;
     }
 }
